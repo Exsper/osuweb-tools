@@ -271,6 +271,7 @@ class Script {
     search() {
         let keyword = $("#mpc-search").val();
         if (keyword === "") return;
+        $("#mpc-statlabel").text("搜索中...")
         if (this.checkInt(keyword)) {
             let bid = parseInt(keyword);
             let playedBeatmapInfos = this.crawler.searchByBid(bid);
