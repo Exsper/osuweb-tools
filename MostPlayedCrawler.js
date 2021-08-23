@@ -88,7 +88,6 @@ class BeatmapPlaycountDiv {
         let $cover = $("<a>", { href: href, class: "beatmap-playcount__cover", style: "background-image: url(" + coverurl + ")" }).appendTo($mainDiv);
         $(`<div class="beatmap-playcount__cover-count"><div title="游玩次数" class="beatmap-playcount__count"><span class="beatmap-playcount__count-icon"><span class="fas fa-play"></span></span>${pbi.getPlayCount()}</div></div>`).appendTo($cover);
         $(`<div class="beatmap-playcount__detail"><div class="beatmap-playcount__info"><div class="beatmap-playcount__info-row u-ellipsis-overflow"><a class="beatmap-playcount__title" href="${href}">${pbi.getSimpleTitle()}<span class="beatmap-playcount__title-artist">by ${pbi.beatmapset.artist_unicode}</span></a></div><div class="beatmap-playcount__info-row u-ellipsis-overflow"><span class="beatmap-playcount__artist">by <strong>${pbi.beatmapset.artist_unicode}</strong></span> <span class="beatmap-playcount__mapper">谱师：<a class="js-usercard beatmap-playcount__mapper-link" data-user-id="${pbi.beatmapset.user_id}" href="https://osu.ppy.sh/users/${pbi.beatmapset.user_id}">${pbi.getCreator()}</a></span></div></div><div class="beatmap-playcount__detail-count"><div title="游玩次数" class="beatmap-playcount__count"><span class="beatmap-playcount__count-icon"><span class="fas fa-play"></span></span>${pbi.getPlayCount()}</div></div></div>`).appendTo($mainDiv);
-        console.log($mainDiv)
         return $mainDiv;
     }
 
@@ -228,7 +227,7 @@ class Script {
         let $td = $("<td>", { style: "width:60%;padding:0 10px" }).appendTo($tr);
         let $searchLabel = $("<span>", { text: "搜索：" }).appendTo($td);
         let $searchTextbox = $("<input>", { type: "text", id: "mpc-search", style: "width:100%;", class: "account-edit-entry__input" }).appendTo($td);
-        $searchTextbox.change(() => {
+        $searchTextbox.bind('input propertychange', () => {
             this.search();
         });
 
@@ -269,40 +268,15 @@ class Script {
         return (re.test(s));
     }
 
-    /*
-    cleanResultTable() {
-        $("#mpc-resultTable").empty();
-    }
-
-    updateResultTable(playedBeatmapInfos) {
-        let $resultTable = $("#mpc-resultTable");
-        let $tr = $("<tr>", { style: "width:100%;line-height:30px" }).appendTo($resultTable);
-        let $td = $("<td>", { style: "width:80%", text: "谱面" }).appendTo($tr);
-        $td = $("<td>", { style: "width:20%", text: "游玩次数" }).appendTo($tr);
-        let totalCount = 0;
-        playedBeatmapInfos.map((pbi) => {
-            let pc = pbi.getPlayCount();
-            totalCount += pc;
-            $tr = $("<tr>", { style: "width:100%;line-height:30px" }).appendTo($resultTable);
-            $td = $("<td>", { text: pbi.title2String() }).appendTo($tr);
-            $td = $("<td>", { text: pbi.playCount2String() }).appendTo($tr);
-        });
-        $tr = $("<tr>", { style: "width:100%;line-height:30px" }).appendTo($resultTable);
-        $td = $("<td>", { text: "总计" }).appendTo($tr);
-        $td = $("<td>", { text: totalCount }).appendTo($tr);
-    }
-    */
-
     search() {
-        // this.cleanResultTable();
         let keyword = $("#mpc-search").val();
+        if (keyword === "") return;
         if (this.checkInt(keyword)) {
             let bid = parseInt(keyword);
             let playedBeatmapInfos = this.crawler.searchByBid(bid);
             if (playedBeatmapInfos.length <= 0) $("#mpc-statlabel").text("翻遍了" + this.crawler.recordCount + "个记录也没有找到这个bid是" + keyword + "的谱面");
             else {
                 $("#mpc-statlabel").text("从 " + this.crawler.recordCount + " 张谱面中找到了 " + playedBeatmapInfos.length + " 个符合条件的谱面");
-                // this.updateResultTable(playedBeatmapInfos);
                 this.bpcd.update(playedBeatmapInfos);
             }
         }
@@ -311,7 +285,6 @@ class Script {
             if (playedBeatmapInfos.length <= 0) $("#mpc-statlabel").text("翻遍了" + this.crawler.recordCount + "个记录也没有找到关键词叫" + keyword + "的谱面");
             else {
                 $("#mpc-statlabel").text("从 " + this.crawler.recordCount + " 张谱面中找到了 " + playedBeatmapInfos.length + " 个符合条件的谱面");
-                // this.updateResultTable(playedBeatmapInfos);
                 this.bpcd.update(playedBeatmapInfos);
             }
         }
@@ -320,7 +293,6 @@ class Script {
 }
 
 function startScrpit() {
-    console.log("run");
     let urlex = /users\/\d+/.exec(location.href);
     if (urlex) {
         let surl = location.origin + "/" + urlex[0];
@@ -332,7 +304,6 @@ function startScrpit() {
 
 // 确保网页加载完成
 function check() {
-    console.log("check");
     let $script = $("#mpc-div");
     let $historicalDiv = $("div[data-page-id=historical]");
     if ($script.length <= 0) {
