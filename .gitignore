@@ -341,4 +341,4 @@ ASALocalRun/
 healthchecksdb
 
 # unfinished
-BeatmapsetDownloader.js
+BeatmapsetDownloader.user.js

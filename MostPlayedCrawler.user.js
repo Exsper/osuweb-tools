@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         Osu Most Played Crawler
-// @namespace    https://github.com/Exsper/osuweb-tools
-// @version      0.1.2
+// @namespace    https://github.com/Exsper/
+// @supportURL   https://github.com/Exsper/osuweb-tools/issues
+// @version      1.0.0
 // @description  查找玩得最多的谱面
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
@@ -11,18 +12,23 @@
 
 const $ = window.$ || {};
 
+class DataStorage {
+    static setValue(item, value) {
+        window.localStorage["mpc-" + item] = value;
+    }
+
+    static getValue(item) {
+        item = "mpc-" + item;
+        return (item in window.localStorage) ? window.localStorage[item] : null;
+    }
+}
+
 class PlayedBeatmapInfo {
     constructor(data) {
         this.beatmap = data.beatmap;
         this.beatmap_id = data.beatmap_id;
         this.beatmapset = data.beatmapset;
         this.count = data.count;
-    }
-
-    getTitles() {
-        let title = this.beatmapset.title;
-        let uni_title = this.beatmapset.title_unicode;
-        return [title, uni_title];
     }
 
     getBid() {
@@ -33,14 +39,18 @@ class PlayedBeatmapInfo {
         return this.beatmapset.id;
     }
 
-    getArtists() {
+    getFullInfos() {
+        let title = this.beatmapset.title;
+        let uni_title = this.beatmapset.title_unicode;
         let artist = this.beatmapset.artist;
         let uni_artist = this.beatmapset.artist_unicode;
-        return [artist, uni_artist];
-    }
-
-    getFullTitle() {
-        return this.beatmapset.artist_unicode + " - " + this.beatmapset.title_unicode + "(" + this.beatmapset.creator + ")[" + this.beatmap.version + "]";
+        let creator = this.beatmapset.creator;
+        let version = this.beatmap.version;
+        let source = this.beatmapset.source;
+        let beatmapId = this.getBid().toString();
+        let beatmapSetId = this.getSid().toString();
+        // bid和sid要求全字匹配
+        return { part: [title, uni_title, artist, uni_artist, creator, version, source], full: [beatmapId, beatmapSetId] };
     }
 
     getSimpleTitle() {
@@ -53,14 +63,6 @@ class PlayedBeatmapInfo {
 
     getPlayCount() {
         return this.count;
-    }
-
-    title2String() {
-        return "(" + this.getBid() + ")" + this.getFullTitle();
-    }
-
-    playCount2String() {
-        return "玩了" + this.getPlayCount() + "次"
     }
 
     getCover() {
@@ -179,16 +181,23 @@ class MostPlayedCrawler {
     }
 
     /**
-     * @param {Array<string>} titles 
+     * @param {{part:Array<string>, full:Array<string>}} titles 
      * @param {string} keyword 
      */
     IsContainKeyword(titles, keyword) {
         let kw = keyword.toLowerCase();
-        return titles.some((title) => {
-            return (title.toLowerCase().indexOf(kw) >= 0)
-        })
+        let partResult = titles.part.some((title) => {
+            if (!title) return false;
+            return (title.toLowerCase().indexOf(kw) >= 0);
+        });
+        let fullResult = titles.full.some((title) => {
+            if (!title) return false;
+            return (title === kw);
+        });
+        return partResult || fullResult;
     }
 
+    /*
     searchByBid(bid) {
         let searchResults = [];
         for (let pbi of this.records) {
@@ -196,11 +205,12 @@ class MostPlayedCrawler {
         }
         return searchResults;
     }
+    */
 
     searchByKeyword(keyword) {
         let searchResults = [];
         for (let pbi of this.records) {
-            if (this.IsContainKeyword(pbi.getTitles(), keyword) || this.IsContainKeyword(pbi.getArtists(), keyword) || this.IsContainKeyword([pbi.getCreator()], keyword)) searchResults.push(pbi);
+            if (this.IsContainKeyword(pbi.getFullInfos(), keyword)) searchResults.push(pbi);
         }
         return searchResults;
     }
@@ -243,11 +253,20 @@ class Script {
         $td = $("<td>", { style: "width:30%;padding:0 10px" }).appendTo($tr);
         let $crawlPagesLabel = $("<span>", { id: "mpc-crawlpageslabel", text: "每次获取页数：" }).appendTo($td);
         let $crawlPagesTextbox = $("<input>", { type: "text", id: "mpc-searchpage", val: "10", class: "account-edit-entry__input", style: "width:30px;" }).appendTo($td);
+        let crawPagesCount = DataStorage.getValue("crawPagesCount") || "10";
+        $crawlPagesTextbox.val(crawPagesCount);
         let $crawlButton = $('<button>', { text: "开始获取", id: "mpc-crawlbtn", class: "btn-osu-big" }).appendTo($td);
         $crawlButton.click(async () => {
+            let crawPagesCountText = parseInt($("#mpc-searchpage").val());
+            let cpc = parseInt(crawPagesCountText);
+            if (!cpc || cpc <= 0) {
+                $("#mpc-crawllabel").text("每次获取页数必须为正整数");
+                return;
+            }
+            DataStorage.setValue("crawPagesCount", crawPagesCountText);
             $crawlButton.attr("disabled", true);
             $crawlButton.text("正在获取");
-            let result = await this.crawler.crawl(parseInt($("#mpc-searchpage").val()));
+            let result = await this.crawler.crawl(cpc);
             if (!result) {
                 $crawlButton.attr("disabled", false);
                 $crawlButton.text("继续获取");
@@ -259,22 +278,12 @@ class Script {
         $td = $("<td>", { style: "width:10%" }).appendTo($tr);
         let $statLabel = $("<p>", { id: "mpc-statlabel", text: "已获取 0 张谱面" }).appendTo($td);
         $td = $("<td>", { style: "width:10%" }).appendTo($tr);
-        let $crawlLabel = $("<p>", { id: "mpc-crawllabel", text: "点击右侧按钮开始获取" }).appendTo($td);
+        let $crawlLabel = $("<p>", { id: "mpc-crawllabel", text: "点击右侧按钮开始获取，每页100张谱面" }).appendTo($td);
 
         let $resultDiv = $("<div>", { id: "mpc-resultDiv" }).appendTo($scriptDiv);
         this.bpcd = new BeatmapPlaycountDiv($resultDiv, mode);
 
         $mostplayedTitle.after($scriptDiv);
-    }
-
-    /**
-       * 判断字符串是否为正整数
-       * @param {String} s
-       * @returns {Boolean} 是正整数
-       */
-    checkInt(s) {
-        var re = /^\d+$/;
-        return (re.test(s));
     }
 
     search() {
@@ -283,23 +292,13 @@ class Script {
             $("#mpc-statlabel").text("请输入关键词");
             return;
         }
-        if (this.checkInt(keyword)) {
-            let bid = parseInt(keyword);
-            let playedBeatmapInfos = this.crawler.searchByBid(bid);
-            if (playedBeatmapInfos.length <= 0) $("#mpc-statlabel").text("翻遍了" + this.crawler.recordCount + "个记录也没有找到这个bid是" + keyword + "的谱面");
-            else {
-                $("#mpc-statlabel").text("从 " + this.crawler.recordCount + " 张谱面中找到了 " + playedBeatmapInfos.length + " 个符合条件的谱面");
-                this.bpcd.update(playedBeatmapInfos);
-            }
-        }
+        let playedBeatmapInfos = this.crawler.searchByKeyword(keyword);
+        if (playedBeatmapInfos.length <= 0) $("#mpc-statlabel").text("找遍了" + this.crawler.recordCount + "个记录也没有找到关键词为" + keyword + "的谱面");
         else {
-            let playedBeatmapInfos = this.crawler.searchByKeyword(keyword);
-            if (playedBeatmapInfos.length <= 0) $("#mpc-statlabel").text("翻遍了" + this.crawler.recordCount + "个记录也没有找到关键词叫" + keyword + "的谱面");
-            else {
-                $("#mpc-statlabel").text("从 " + this.crawler.recordCount + " 张谱面中找到了 " + playedBeatmapInfos.length + " 个符合条件的谱面");
-                this.bpcd.update(playedBeatmapInfos);
-            }
+            $("#mpc-statlabel").text("从 " + this.crawler.recordCount + " 张谱面中找到了 " + playedBeatmapInfos.length + " 个符合条件的谱面");
+            this.bpcd.update(playedBeatmapInfos);
         }
+
     }
 
 }
