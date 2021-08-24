@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Osu Most Played Crawler
 // @namespace    https://github.com/Exsper/osuweb-tools
-// @version      0.1.1
+// @version      0.1.2
 // @description  查找玩得最多的谱面
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
@@ -242,7 +242,7 @@ class Script {
 
         $td = $("<td>", { style: "width:30%;padding:0 10px" }).appendTo($tr);
         let $crawlPagesLabel = $("<span>", { id: "mpc-crawlpageslabel", text: "每次获取页数：" }).appendTo($td);
-        let $crawlPagesTextbox = $("<input>", { type: "text", id: "mpc-searchpage", val: "10", class: "account-edit-entry__input" ,style: "width:30px;"}).appendTo($td);
+        let $crawlPagesTextbox = $("<input>", { type: "text", id: "mpc-searchpage", val: "10", class: "account-edit-entry__input", style: "width:30px;" }).appendTo($td);
         let $crawlButton = $('<button>', { text: "开始获取", id: "mpc-crawlbtn", class: "btn-osu-big" }).appendTo($td);
         $crawlButton.click(async () => {
             $crawlButton.attr("disabled", true);
@@ -319,7 +319,18 @@ function check() {
     let $script = $("#mpc-div");
     let $historicalDiv = $("div[data-page-id=historical]");
     if ($script.length <= 0) {
-        if ($historicalDiv.length > 0) startScrpit();
+        if ($historicalDiv.length > 0) {
+            startScrpit();
+            // 局部刷新重新加载
+            let interval = setInterval(() => {
+                // console.log("检查脚本框架");
+                if ($("#mpc-div").length <= 0) {
+                    // console.log("检查到页面局部刷新");
+                    clearInterval(interval);
+                    check();
+                }
+            }, 5000);
+        }
         else setTimeout(function () { check(); }, 2000);
     }
 
@@ -327,6 +338,4 @@ function check() {
 
 $(document).ready(() => {
     check();
-    // 防多次运行
-    // if (window.self === window.top) startScrpit();
 });
