@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Osu Most Played Crawler
 // @namespace    https://github.com/Exsper/osuweb-tools
-// @version      0.1
+// @version      0.1.1
 // @description  查找玩得最多的谱面
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
@@ -211,6 +211,8 @@ class Script {
     constructor(href) {
         this.crawler = new MostPlayedCrawler(href);
         this.bpcd;
+        this.lastPressTime = new Date();
+        this.WAITTIME = 1000;
     }
 
     init() {
@@ -225,16 +227,22 @@ class Script {
         let $scriptDiv = $("<div>", { id: "mpc-div" });
         let $scriptTable = $("<table>", { id: "mpc-table", style: "width:100%" }).appendTo($scriptDiv);
         let $tr = $("<tr>", { style: "width:100%" }).appendTo($scriptTable);
-        let $td = $("<td>", { style: "width:60%;padding:0 10px" }).appendTo($tr);
+        let $td = $("<td>", { style: "width:70%;padding:0 10px" }).appendTo($tr);
         let $searchLabel = $("<span>", { text: "搜索：" }).appendTo($td);
-        let $searchTextbox = $("<input>", { type: "text", id: "mpc-search", style: "width:100%;", class: "account-edit-entry__input" }).appendTo($td);
+        let $searchTextbox = $("<input>", { type: "text", id: "mpc-search", style: "width:80%;max-width:unset;", class: "account-edit-entry__input" }).appendTo($td);
         $searchTextbox.bind('input propertychange', () => {
-            this.search();
+            this.lastPressTime = new Date();
+            $("#mpc-statlabel").text("搜索中...");
+            setTimeout(() => {
+                if ((new Date() - this.lastPressTime) >= (this.WAITTIME * 0.99)) {
+                    this.search();
+                }
+            }, this.WAITTIME);
         });
 
-        $td = $("<td>", { style: "width:40%;padding:0 10px" }).appendTo($tr);
+        $td = $("<td>", { style: "width:30%;padding:0 10px" }).appendTo($tr);
         let $crawlPagesLabel = $("<span>", { id: "mpc-crawlpageslabel", text: "每次获取页数：" }).appendTo($td);
-        let $crawlPagesTextbox = $("<input>", { type: "text", id: "mpc-searchpage", val: "10", class: "account-edit-entry__input" }).appendTo($td);
+        let $crawlPagesTextbox = $("<input>", { type: "text", id: "mpc-searchpage", val: "10", class: "account-edit-entry__input" ,style: "width:30px;"}).appendTo($td);
         let $crawlButton = $('<button>', { text: "开始获取", id: "mpc-crawlbtn", class: "btn-osu-big" }).appendTo($td);
         $crawlButton.click(async () => {
             $crawlButton.attr("disabled", true);
@@ -271,8 +279,10 @@ class Script {
 
     search() {
         let keyword = $("#mpc-search").val();
-        if (keyword === "") return;
-        $("#mpc-statlabel").text("搜索中...");
+        if (keyword === "") {
+            $("#mpc-statlabel").text("请输入关键词");
+            return;
+        }
         if (this.checkInt(keyword)) {
             let bid = parseInt(keyword);
             let playedBeatmapInfos = this.crawler.searchByBid(bid);
