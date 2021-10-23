@@ -2,7 +2,7 @@
 // @name         Osu Most Played Crawler
 // @namespace    https://github.com/Exsper/
 // @supportURL   https://github.com/Exsper/osuweb-tools/issues
-// @version      1.0.0
+// @version      1.0.0.1
 // @description  查找玩得最多的谱面
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
@@ -89,7 +89,7 @@ class BeatmapPlaycountDiv {
         let $mainDiv = $("<div>", { class: "beatmap-playcount" });
         let $cover = $("<a>", { href: href, class: "beatmap-playcount__cover", style: "background-image: url(" + coverurl + ")" }).appendTo($mainDiv);
         $(`<div class="beatmap-playcount__cover-count"><div title="游玩次数" class="beatmap-playcount__count"><span class="beatmap-playcount__count-icon"><span class="fas fa-play"></span></span>${pbi.getPlayCount()}</div></div>`).appendTo($cover);
-        $(`<div class="beatmap-playcount__detail"><div class="beatmap-playcount__info"><div class="beatmap-playcount__info-row u-ellipsis-overflow"><a class="beatmap-playcount__title" href="${href}">${pbi.getSimpleTitle()}<span class="beatmap-playcount__title-artist">by ${pbi.beatmapset.artist_unicode}</span></a></div><div class="beatmap-playcount__info-row u-ellipsis-overflow"><span class="beatmap-playcount__artist">by <strong>${pbi.beatmapset.artist_unicode}</strong></span> <span class="beatmap-playcount__mapper">谱师：<a class="js-usercard beatmap-playcount__mapper-link" data-user-id="${pbi.beatmapset.user_id}" href="https://osu.ppy.sh/users/${pbi.beatmapset.user_id}">${pbi.getCreator()}</a></span></div></div><div class="beatmap-playcount__detail-count"><div title="游玩次数" class="beatmap-playcount__count"><span class="beatmap-playcount__count-icon"><span class="fas fa-play"></span></span>${pbi.getPlayCount()}</div></div></div>`).appendTo($mainDiv);
+        $(`<div class="beatmap-playcount__detail"><div class="beatmap-playcount__info"><div class="beatmap-playcount__info-row u-ellipsis-overflow"><a class="beatmap-playcount__title" href="${href}">${pbi.getSimpleTitle()}<span class="beatmap-playcount__title-artist">曲师： ${pbi.beatmapset.artist_unicode}</span></a></div><div class="beatmap-playcount__info-row u-ellipsis-overflow"><span class="beatmap-playcount__artist">曲师： <strong>${pbi.beatmapset.artist_unicode}</strong></span> <span class="beatmap-playcount__mapper">谱师：<a class="js-usercard beatmap-playcount__mapper-link" data-user-id="${pbi.beatmapset.user_id}" href="https://osu.ppy.sh/users/${pbi.beatmapset.user_id}">${pbi.getCreator()}</a></span></div></div><div class="beatmap-playcount__detail-count"><div title="游玩次数" class="beatmap-playcount__count"><span class="beatmap-playcount__count-icon"><span class="fas fa-play"></span></span>${pbi.getPlayCount()}</div></div></div>`).appendTo($mainDiv);
         return $mainDiv;
     }
 
