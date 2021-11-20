@@ -2,7 +2,7 @@
 // @name         Osu Last Ranked Maps Monitor
 // @namespace    https://github.com/Exsper/
 // @supportURL   https://github.com/Exsper/osuweb-tools/issues
-// @version      0.0.1
+// @version      0.0.2
 // @description  监控新ranked谱面
 // @author       Exsper
 // @match        https://osu.ppy.sh/beatmapsets
@@ -98,6 +98,7 @@ class RankedMonitor {
             if (bs[i].beatmapSetId === this.LastRankedId) break;
             newRankedBeatmaps.push(bs[i]);
         }
+        this.LastRankedId = bs[0].beatmapSetId;
         return newRankedBeatmaps;
     }
 
@@ -105,16 +106,16 @@ class RankedMonitor {
         let newbs = await this.getNewBeatmapSets();
         let trs = newbs.map((newbs) => {
             let $tr = $("<tr>");
-            let $td = $("<td>", { style: "width:50%" }).appendTo($tr);
-            let $title = $("<span>", { text: newbs.getTitle() }).appendTo($td);
+            let $td = $("<td>").appendTo($tr);
+            let $title = $("<a>", { text: newbs.getTitle(), target: "_blank" }).appendTo($td);
             $title.attr("href", newbs.getUrl());
-            $td = $("<td>", { style: "width:20%" }).appendTo($tr);
+            $td = $("<td>").appendTo($tr);
             let modes = newbs.getMapCount();
             if (modes[0] > 0) $('<i class="fal fa-extra-mode-osu"></i>').appendTo($td);
             if (modes[1] > 0) $('<i class="fal fa-extra-mode-taiko"></i>').appendTo($td);
             if (modes[2] > 0) $('<i class="fal fa-extra-mode-fruits"></i>').appendTo($td);
             if (modes[3] > 0) $('<i class="fal fa-extra-mode-mania"></i>').appendTo($td);
-            $td = $("<td>", { style: "width:30%" }).appendTo($tr);
+            $td = $("<td>").appendTo($tr);
             $("<span>", { text: newbs.ranked_date.toLocaleTimeString() }).appendTo($td);
             return $tr;
         });
@@ -123,22 +124,22 @@ class RankedMonitor {
 }
 
 class Script {
-    constructor(mode = -1, interval = 60 * 1000) {
+    constructor(mode = -1, interval = 30 * 1000) {
         this.rankedMonitor = new RankedMonitor(mode);
         this.interval = interval;
     }
 
     async init() {
-        let $mainDiv = $("<div>", { id: "lrm-div", style: "top: 20%;right: 2%;position: absolute;width: 400px;" });
+        let $mainDiv = $("<div>", { id: "lrm-div", style: "top:20%;right:0%;position:absolute;text-align:center;background:darkslateblue;" });
         let $searchLabel = $("<span>", { id: "lrm-stat", text: "状态" }).appendTo($mainDiv);
         $("<br>").appendTo($mainDiv);
-        let $mainTable = $("<table>", { id: "lrm-table", style: "float:right;" }).appendTo($mainDiv);
+        let $mainTable = $("<table>", { id: "lrm-table", style: "float:right;", class: "ranking-page-table" }).appendTo($mainDiv);
         let $tr = $("<tr>", { style: "width:100%" }).appendTo($mainTable);
-        let $td = $("<td>", { style: "width:50%;padding:0 10px" }).appendTo($tr);
+        let $td = $("<td>").appendTo($tr);
         $("<span>", { text: "谱面" }).appendTo($td);
-        $td = $("<td>", { style: "width:20%;padding:0 10px" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { text: "模式" }).appendTo($td);
-        $td = $("<td>", { style: "width:30%;padding:0 10px" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { text: "时间" }).appendTo($td);
         $mainDiv.appendTo($("body"))
         await this.rankedMonitor.firstRun();
