@@ -107,7 +107,7 @@ class RankedMonitor {
             let $tr = $("<tr>");
             let $td = $("<td>", { style: "width:50%" }).appendTo($tr);
             let $title = $("<span>", { text: newbs.getTitle() }).appendTo($td);
-            $title.attr("href", newbs,getUrl());
+            $title.attr("href", newbs.getUrl());
             $td = $("<td>", { style: "width:20%" }).appendTo($tr);
             let modes = newbs.getMapCount();
             if (modes[0] > 0) $('<i class="fal fa-extra-mode-osu"></i>').appendTo($td);
