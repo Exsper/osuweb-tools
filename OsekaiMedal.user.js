@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Osekai Medal
 // @namespace   https://github.com/Exsper/
-// @version     0.1.1
+// @version     1.0.0
 // @author      Exsper
 // @description 使用osekai查阅osu!成就方法
 // @homepage    https://github.com/Exsper/osuweb-tools#readme
