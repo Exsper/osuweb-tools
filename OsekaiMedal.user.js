@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Osekai Medal
 // @namespace   https://github.com/Exsper/
-// @version     0.1.0
+// @version     0.1.1
 // @author      Exsper
 // @description 使用osekai查阅osu!成就方法
 // @homepage    https://github.com/Exsper/osuweb-tools#readme
@@ -163,7 +163,36 @@ function getAPI(url, method = "GET") {
     return new Promise(function (resolve, reject) {
         GMX.xmlHttpRequest({
             method: method,
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
             url: url,
+            responseType: "json",
+            onload: function (data) {
+                if ((data.status >= 200 && data.status < 300) || data.status == 304) {
+                    resolve(data.response);
+                } else {
+                    reject({
+                        status: data.status,
+                        statusText: data.statusText
+                    });
+                }
+            },
+            onerror: function (data) {
+                reject({
+                    status: data.status,
+                    statusText: data.statusText
+                });
+            }
+        });
+    });
+}
+
+function postAPI(url, data) {
+    return new Promise(function (resolve, reject) {
+        GMX.xmlHttpRequest({
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            url: url,
+            data: data,
             responseType: "json",
             onload: function (data) {
                 if ((data.status >= 200 && data.status < 300) || data.status == 304) {
@@ -199,6 +228,20 @@ async function getMedalInfo(medalAlt) {
     catch (ex) {
         console.log(ex);
         return null;
+    }
+}
+
+async function getBeatmapList(medalAlt) {
+    try {
+        let bl = await postAPI("https://osekai.net/medals/api/beatmaps.php", "strSearch=" + medalAlt).then((data) => {
+            if (!data || !(data instanceof Array)) return [];
+            return data.map((binfo) => new BeatmapInfo(binfo))
+        });
+        return bl;
+    }
+    catch (ex) {
+        console.log(ex);
+        return [];
     }
 }
 
@@ -253,7 +296,7 @@ async function openMedal(alt) {
     medalContent.append(
         `<img width="80px" src="${mi.Link}"> 
         <span style="font-size: 36px; vertical-align: middle;">${mi.Name}</span>
-        <br><span>Mods要求： </span>${(mi.Mods.length<=0) ? "<span>未指定</span>" : mi.Mods.map(function (mods) {
+        <br><span>Mods要求： </span>${(mi.Mods.length <= 0) ? "<span>未指定</span>" : mi.Mods.map(function (mods) {
             return `<div style="display: -webkit-inline-box; vertical-align: bottom;" class="mod mod--${mods}"></div><span>${mods}</span>`
         }).join("")}
         <br><span>模式要求： ${(!mi.mode) ? "全模式均可" : mi.mode}</span>
@@ -280,6 +323,9 @@ async function openMedal(alt) {
                 ${apHtml}
             </table>`
         );
+    }
+    if (mi.beatmaps.length <= 0) {
+        mi.beatmaps = await getBeatmapList(alt);
     }
     if (mi.beatmaps.length > 0) {
         medalContent.append(`<br><span>下载来源：</span>`);
@@ -342,7 +388,7 @@ async function openMedal(alt) {
         );
         $(".downsite[downtype!=" + $("#downloadSelect").val() + "]").hide();
     }
-    if((mi.PackIDs.length <= 0) && (mi.beatmaps.length <= 0)) {
+    if ((mi.PackIDs.length <= 0) && (mi.beatmaps.length <= 0)) {
         medalContent.append(
             `<br><br><a href="https://osekai.net/medals/?medal=${alt}" target="_blank">请点此访问Osekai网站并登录以查看推荐谱面</a>
             `);
