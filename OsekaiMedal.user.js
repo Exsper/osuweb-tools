@@ -129,7 +129,7 @@ class MedalInfo {
         let packIDArray = PackIDs.split(",");
         let packInfos = [];
         packIDArray.map((packID, index) => {
-            if (packID !== "0") packInfos.push(new PackInfo(packID, index));
+            if (packID !== "" && packID !== "0") packInfos.push(new PackInfo(packID, index));
         });
         return packInfos;
     }
