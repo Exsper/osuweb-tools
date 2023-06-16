@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Osekai Medal
 // @namespace   https://github.com/Exsper/
-// @version     1.0.0
+// @version     1.0.1
 // @author      Exsper
 // @description 使用osekai查阅osu!成就方法
 // @homepage    https://github.com/Exsper/osuweb-tools#readme
@@ -260,7 +260,7 @@ function addCss() {
 
 function addMedalBtn(medalIcon) {
     let alt = medalIcon.alt;
-    let medalBtn = $(`<a class='medalBtn' data='${alt}'>?</a>`).hide();
+    let medalBtn = $(`<a class='medalBtn' data="${alt}">?</a>`).hide();
     medalBtn.click(async function () {
         await openMedal($(this).attr("data"));
     });
