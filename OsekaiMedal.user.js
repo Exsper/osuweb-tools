@@ -324,8 +324,11 @@ async function openMedal(alt) {
             </table>`
         );
     }
+    medalContent.append("<br>");
     if (mi.beatmaps.length <= 0) {
+        medalContent.append("<h2 id='fetchBeatmap'>获取推荐谱面中...</h2>");
         mi.beatmaps = await getBeatmapList(alt);
+        $("#fetchBeatmap").remove();
     }
     if (mi.beatmaps.length > 0) {
         medalContent.append(`<br><span>下载来源：</span>`);
