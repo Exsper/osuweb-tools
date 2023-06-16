@@ -81,7 +81,7 @@ class BeatmapInfo {
             case "NeriNyanNoVideo": return `https://api.nerinyan.moe/d/${this.MapsetID}?nv=1`;
             case "Chimu": return `https://api.chimu.moe/v1/download/${this.MapsetID}?n=1`;
             case "osu":
-            default: return `https://osu.ppy.sh/d/${this.MapsetID}`;
+            default: return `https://osu.ppy.sh/beatmapsets/${this.MapsetID}/download`;
         }
     }
 }
