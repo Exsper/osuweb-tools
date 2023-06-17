@@ -137,7 +137,10 @@ class MedalInfo {
     norMods(mods) {
         // "" or null
         if (!mods) return [];
-        return mods.split(",");
+        let ms = mods.split(",");
+        // "In Memoriam"'s EZHDHTFL
+        if (ms.length === 1 && ms[0].length > 3) ms = ms[0].match(/\w{2}/g);
+        return ms;
     }
 
     norMode(restriction) {
