@@ -163,7 +163,7 @@ function getAPI(url, method = "GET") {
     return new Promise(function (resolve, reject) {
         GMX.xmlHttpRequest({
             method: method,
-            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
             url: url,
             responseType: "json",
             onload: function (data) {
@@ -190,7 +190,7 @@ function postAPI(url, data) {
     return new Promise(function (resolve, reject) {
         GMX.xmlHttpRequest({
             method: "POST",
-            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
             url: url,
             data: data,
             responseType: "json",
@@ -248,19 +248,20 @@ async function getBeatmapList(medalAlt) {
 function addCss() {
     if (!$(".osekai-medal-style").length) {
         $(document.head).append($("<style class='osekai-medal-style'></style>").html(
-            `.medalBtn {position: absolute; right: -1px; bottom: -1px; font-size: 12px; background: white; padding: 3px; width: 22px; text-align: center; border-style: solid; border-width: 1px;}
+            `.medalBtn {position: absolute; right: -1px; bottom: -1px; font-size: 12px; background: white; padding: 3px; text-align: center; border-style: solid; border-width: 1px;}
             .medalBtn:hover {cursor: pointer;}
             .medalCloseBtnDiv {position: absolute; right: 15px; top: 15px;}
             .medalPanel {max-height:600px; overflow-y: auto; color: #000; width: 800px; position: fixed; display: none;z-index: 10000;padding: 15px 20px 10px;-webkit-border-radius: 10px;-moz-border-radius: 10px;border-radius: 10px;background: #fff; left: 50%; top:50%; transform: translate(-50%, -50%);}
             .medalOverlay {position: fixed;top: 0;left: 0;bottom:0;right:0;width: 100%;height: 100%;z-index: 9999;background: #000;display: none;-ms-filter: 'alpha(Opacity=50)';-moz-opacity: .5;-khtml-opacity: .5;opacity: .5;}
-            #medalContent, #medalContent h1, #medalContent h2 {color: #000;}`
+            #medalContent, #medalContent h1, #medalContent h2 {color: #000;}
+            #beatmapList td {min-width: 40px;}`
         ));
     }
 }
 
 function addMedalBtn(medalIcon) {
     let alt = medalIcon.alt;
-    let medalBtn = $(`<a class='medalBtn' data="${alt}">?</a>`).hide();
+    let medalBtn = $(`<a class='medalBtn' data="${alt}">查看详情</a>`).hide();
     medalBtn.click(async function () {
         await openMedal($(this).attr("data"));
     });
@@ -289,6 +290,14 @@ async function openMedal(alt) {
     /**@type {MedalInfo} */
     let mi = await getMedalInfo(alt);
     medalContent.empty();
+
+    let modeIcons = [
+        '<i class="fal fa-extra-mode-osu"></i>',
+        '<i class="fal fa-extra-mode-taiko"></i>',
+        '<i class="fal fa-extra-mode-fruits"></i>',
+        '<i class="fal fa-extra-mode-mania"></i>'
+    ];
+
     if (!mi) {
         medalContent.append(`<h1>无法从osekai获取数据 :(</h1>`);
         return;
@@ -299,16 +308,10 @@ async function openMedal(alt) {
         <br><span>Mods要求： </span>${(mi.Mods.length <= 0) ? "<span>未指定</span>" : mi.Mods.map(function (mods) {
             return `<div style="display: -webkit-inline-box; vertical-align: bottom;" class="mod mod--${mods}"></div><span>${mods}</span>`
         }).join("")}
-        <br><span>模式要求： ${(!mi.mode) ? "全模式均可" : mi.mode}</span>
+        <br><span>模式要求： </span>${(!mi.mode) ? modeIcons.join("") : `<i class="fal fa-extra-mode-${mi.mode}"></i>`}
         <br>${mi.Solution}
         <br><span>达成率： ${mi.Rarity}%</span>`
     );
-    let modeIcons = [
-        '<i class="fal fa-extra-mode-osu"></i>',
-        '<i class="fal fa-extra-mode-taiko"></i>',
-        '<i class="fal fa-extra-mode-fruits"></i>',
-        '<i class="fal fa-extra-mode-mania"></i>'
-    ];
     if (mi.PackIDs.length > 0) {
         let apHtml = "";
         mi.PackIDs.forEach(function (pi) {
@@ -372,7 +375,7 @@ async function openMedal(alt) {
             `<h2>推荐谱面</h2>
             <table id='beatmapList' style='width: 100%; text-align: center;' border='1'>
                 <tr>
-                    <td>模式</td>
+                    <td >模式</td>
                     <td>缩略图</td>
                     <td>谱面</td>
                     <td class="downsite" downtype="Beatconnect">Beatconnect下载</td>
@@ -391,11 +394,9 @@ async function openMedal(alt) {
         );
         $(".downsite[downtype!=" + $("#downloadSelect").val() + "]").hide();
     }
-    if ((mi.PackIDs.length <= 0) && (mi.beatmaps.length <= 0)) {
-        medalContent.append(
-            `<br><br><a href="https://osekai.net/medals/?medal=${alt}" target="_blank">请点此访问Osekai网站并登录以查看推荐谱面</a>
-            `);
-    }
+    medalContent.append(
+        `<br><br><a href="https://osekai.net/medals/?medal=${alt}" target="_blank">在Osekai.net上查看</a>
+    `);
 }
 
 function closeMedalPanel() {
