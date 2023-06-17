@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Osekai Medal
 // @namespace   https://github.com/Exsper/
-// @version     1.0.1
+// @version     1.0.2
 // @author      Exsper
 // @description 使用osekai查阅osu!成就方法
 // @homepage    https://github.com/Exsper/osuweb-tools#readme
@@ -254,10 +254,12 @@ function addCss() {
             `.medalBtn {position: absolute; right: -1px; bottom: -1px; font-size: 12px; background: white; padding: 3px; text-align: center; border-style: solid; border-width: 1px;}
             .medalBtn:hover {cursor: pointer;}
             .medalCloseBtnDiv {position: absolute; right: 15px; top: 15px;}
+            .omThemeBtnDiv {position: absolute; right: 50px; top: 15px;}
             .medalPanel {max-height:600px; overflow-y: auto; color: #000; width: 800px; position: fixed; display: none;z-index: 10000;padding: 15px 20px 10px;-webkit-border-radius: 10px;-moz-border-radius: 10px;border-radius: 10px;background: #fff; left: 50%; top:50%; transform: translate(-50%, -50%);}
+            .omSubtitle {font-size: 24px}
             .medalOverlay {position: fixed;top: 0;left: 0;bottom:0;right:0;width: 100%;height: 100%;z-index: 9999;background: #000;display: none;-ms-filter: 'alpha(Opacity=50)';-moz-opacity: .5;-khtml-opacity: .5;opacity: .5;}
-            #medalContent, #medalContent h1, #medalContent h2 {color: #000;}
-            #beatmapList td {min-width: 40px;}`
+            #beatmapList td {min-width: 40px;}
+            .omdark, .omdark select, .omdark > #medalContent, .omdark .medalCloseBtn, .omdark .omThemeBtn {background-color: #382e32; color: #FFF;}`
         ));
     }
 }
@@ -287,7 +289,7 @@ async function openMedal(alt) {
     if (alt === undefined) return;
     var medalContent = $("#medalContent");
     medalContent.empty();
-    medalContent.append(`<h1>加载中...</h1>`);
+    medalContent.append(`<span class="omSubtitle">加载中...</span>`);
     $("#medalOverlay").fadeIn(200);
     $("#medalPanel").fadeIn(200);
     /**@type {MedalInfo} */
@@ -302,7 +304,7 @@ async function openMedal(alt) {
     ];
 
     if (!mi) {
-        medalContent.append(`<h1>无法从osekai获取数据 :(</h1>`);
+        medalContent.append(`<span class="omSubtitle">无法从osekai获取数据 :(</span>`);
         return;
     }
     medalContent.append(
@@ -324,7 +326,7 @@ async function openMedal(alt) {
             apHtml += `<tr><td>${modeIcons[pi.modeCode]}</td><td><a href="${pi.url}" target="_blank">${pi.url}</a></td></tr>`;
         });
         medalContent.append(
-            `<h2>推荐曲包</h2>
+            `<br><br><span class="omSubtitle">推荐曲包</span>
             <table id='packList' style='width: 100%; text-align: center;' border='1'>
                 <tr>
                     <td>模式</td><td>曲包</td>
@@ -335,7 +337,7 @@ async function openMedal(alt) {
     }
     medalContent.append("<br>");
     if (mi.beatmaps.length <= 0) {
-        medalContent.append("<h2 id='fetchBeatmap'>获取推荐谱面中...</h2>");
+        medalContent.append("<span id='fetchBeatmap' class='omSubtitle'>获取推荐谱面中...</span>");
         mi.beatmaps = await getBeatmapList(alt);
         $("#fetchBeatmap").remove();
     }
@@ -378,10 +380,10 @@ async function openMedal(alt) {
                     </tr>`;
         });
         medalContent.append(
-            `<h2>推荐谱面</h2>
+            `<br><span class="omSubtitle">推荐谱面</span>
             <table id='beatmapList' style='width: 100%; text-align: center;' border='1'>
                 <tr>
-                    <td >模式</td>
+                    <td>模式</td>
                     <td>缩略图</td>
                     <td>谱面</td>
                     <td class="downsite" downtype="Beatconnect">Beatconnect下载</td>
@@ -410,19 +412,31 @@ function closeMedalPanel() {
     $("#medalPanel").fadeOut(200);
 }
 
-function startScrpit() {
+async function startScrpit() {
     addCss();
     $("body").append("<div class='medalOverlay' id='medalOverlay' style='display:none;''></div>");
     $("body").append("<div class='medalPanel' id='medalPanel' style='display:none;'></div>");
     var medalContent = $("<div id='medalContent'>");
     $("#medalPanel").append(
         "<div class='medalCloseBtnDiv' style='display: block;''><button class='medalCloseBtn'>x</button></div>",
+        "<div class='omThemeBtnDiv' style='display: block;''><button class='omThemeBtn'>切换颜色</button></div>",
         medalContent
     );
     $("#medalOverlay, .medalCloseBtn").click(function () {
         closeMedalPanel();
     });
-
+    $(".omThemeBtn").click(async function () {
+        if ($("#medalPanel").hasClass("omdark")) {
+            $("#medalPanel").removeClass("omdark");
+            await GMX.setValue("OMDarkTheme", "0");
+        }
+        else {
+            $("#medalPanel").addClass("omdark");
+            await GMX.setValue("OMDarkTheme", "1");
+        }
+    });
+    let saveOMDarkTheme = await GMX.getValue("OMDarkTheme", "0");
+    if (saveOMDarkTheme === "1") $("#medalPanel").addClass("omdark");
     addAllMedalBtn();
 }
 
