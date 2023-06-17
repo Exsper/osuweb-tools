@@ -308,7 +308,10 @@ async function openMedal(alt) {
         <br><span>Mods要求： </span>${(mi.Mods.length <= 0) ? "<span>未指定</span>" : mi.Mods.map(function (mods) {
             return `<div style="display: -webkit-inline-box; vertical-align: bottom;" class="mod mod--${mods}"></div><span>${mods}</span>`
         }).join("")}
-        <br><span>模式要求： </span>${(!mi.mode) ? modeIcons.join("") : `<i class="fal fa-extra-mode-${mi.mode}"></i>`}
+        <br><span>模式要求： </span>${
+            (mi.PackIDs.length > 0) ? "<span>见曲包</span>" :
+            ((!mi.mode) ? modeIcons.join("") : `<i class="fal fa-extra-mode-${mi.mode}"></i>`)
+        }
         <br>${mi.Solution}
         <br><span>达成率： ${mi.Rarity}%</span>`
     );
