@@ -76,7 +76,7 @@ class BeatmapInfo {
             case "Beatconnect": return `https://beatconnect.io/b/${this.MapsetID}`;
             case "Sayobot": return `https://dl.sayobot.cn/beatmaps/download/full/${this.MapsetID}`;
             case "SayobotNoVideo": return `https://dl.sayobot.cn/beatmaps/download/novideo/${this.MapsetID}`;
-            case "SayobotMini": return `https://dl.sayobot.cn/beatmaps/download/novideo/${this.MapsetID}`;
+            case "SayobotMini": return `https://dl.sayobot.cn/beatmaps/download/mini/${this.MapsetID}`;
             case "NeriNyan": return `https://api.nerinyan.moe/d/${this.MapsetID}`;
             case "NeriNyanNoVideo": return `https://api.nerinyan.moe/d/${this.MapsetID}?nv=1`;
             case "Chimu": return `https://api.chimu.moe/v1/download/${this.MapsetID}?n=1`;
