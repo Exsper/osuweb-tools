@@ -384,7 +384,7 @@ class Script {
         const DIGIT = 3;
 
         $("#bps-origin-scorepp").text(this.bsl.origin_scorePP.toFixed(DIGIT));
-        $("#bps-origin-bonuspp").text(this.bsl.origin_bonusPP.toFixed(DIGIT));
+        $("#bps-origin-bonuspp").text(this.bsl.origin_bonusPP.toFixed(DIGIT) + " (大约 " + this.bsl.origin_scoreCount + " 个)");
         $("#bps-origin-totalpp").text(this.bsl.origin_totalPP.toFixed(DIGIT));
 
         let c_scorepp = this.bsl.scorePP - this.bsl.origin_scorePP;
@@ -401,7 +401,7 @@ class Script {
         else $("#bps-compare-totalpp").text(" ");
 
         $("#bps-sim-scorepp").text(this.bsl.scorePP.toFixed(DIGIT));
-        $("#bps-sim-bonuspp").text(this.bsl.bonusPP.toFixed(DIGIT));
+        $("#bps-sim-bonuspp").text(this.bsl.bonusPP.toFixed(DIGIT) + " (大约 " + this.bsl.scoreCount + " 个)");
         $("#bps-sim-totalpp").text(this.bsl.totalPP.toFixed(DIGIT));
     }
 
