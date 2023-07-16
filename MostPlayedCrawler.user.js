@@ -2,7 +2,7 @@
 // @name         Osu Most Played Crawler
 // @namespace    https://github.com/Exsper/
 // @supportURL   https://github.com/Exsper/osuweb-tools/issues
-// @version      1.0.0.2
+// @version      1.0.0.3
 // @description  查找玩得最多的谱面
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
@@ -226,11 +226,11 @@ class Script {
     }
 
     init() {
-        let selectMode = $(".game-mode-link.game-mode-link--active").text();
+        let selectMode = $(".game-mode-link.game-mode-link--active").attr("data-mode");
         let mode = "osu";
-        if (selectMode.indexOf("taiko") > 0) mode = "taiko";
-        if (selectMode.indexOf("catch") > 0) mode = "fruits";
-        if (selectMode.indexOf("mania") > 0) mode = "mania";
+        if (selectMode.indexOf("taiko") >= 0) mode = "taiko";
+        if (selectMode.indexOf("fruits") >= 0) mode = "fruits";
+        if (selectMode.indexOf("mania") >= 0) mode = "mania";
 
         let $historicalDiv = $("div[data-page-id=historical]");
         let $mostplayedTitle = $(".title.title--page-extra-small:eq(1)", $historicalDiv);
