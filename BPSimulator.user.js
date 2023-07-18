@@ -1,13 +1,14 @@
 // ==UserScript==
 // @name        BPSimulator
 // @namespace   https://github.com/Exsper/
-// @version     1.0.0
+// @version     1.1.0
 // @author      Exsper
 // @description 模拟BP变更情况
 // @homepage    https://github.com/Exsper/osuweb-tools#readme
 // @supportURL  https://github.com/Exsper/osuweb-tools/issues
 // @match       https://osu.ppy.sh/users/*
 // @match       http://osu.ppy.sh/users/*
+// @connect     osudaily.net
 // @noframes    
 // @grant       GM_xmlhttpRequest
 // @grant       GM.xmlHttpRequest
@@ -248,6 +249,38 @@ async function getBPInfo(href, mode) {
     }
 }
 
+function getRank(pp, mode) {
+    try {
+        $("#bps-compare-rank").text("");
+        $("#bps-sim-rank").text("获取中...");
+        let params = {
+            t: "pp",
+            v: pp,
+            m: mode,
+        }
+        let url = getUrl("https://osudaily.net/data/getPPRank.php", params);
+        // console.log(url)
+        getAPI(url, "GET").then((data) => {
+            // console.log(data)
+            if (!data) {
+                $("#bps-compare-rank").text("");
+                $("#bps-sim-rank").text("获取rank失败");
+                return;
+            }
+            let origin_rank = parseInt($("#bps-origin-rank").text().substring(1));
+            let sim_rank = parseInt(data);
+            $("#bps-sim-rank").text("#" + sim_rank);
+            let compare = origin_rank - sim_rank;
+            if (compare > 0) $("#bps-compare-rank").text("+" + compare);
+            else if (compare < 0) $("#bps-compare-rank").text(compare);
+        });
+    }
+    catch (ex) {
+        console.log(ex);
+        $("#bps-sim-rank").text("获取rank失败");
+    }
+}
+
 function addCss() {
     if (!$(".bps-style").length) {
         $(document.head).append($("<style class='bps-style'></style>").html(
@@ -261,14 +294,15 @@ class Script {
         this.href = href;
         /** @type {BestScoreList | null} */
         this.bsl = null;
+        this.modeCode = 0;
     }
 
     init_Frame() {
         let selectMode = $(".game-mode-link.game-mode-link--active").attr("data-mode");
         let mode = "osu";
-        if (selectMode.indexOf("taiko") >= 0) mode = "taiko";
-        if (selectMode.indexOf("fruits") >= 0) mode = "fruits";
-        if (selectMode.indexOf("mania") >= 0) mode = "mania";
+        if (selectMode.indexOf("taiko") >= 0) {mode = "taiko"; this.modeCode = 1;}
+        if (selectMode.indexOf("fruits") >= 0) {mode = "fruits"; this.modeCode = 2;}
+        if (selectMode.indexOf("mania") >= 0) {mode = "mania"; this.modeCode = 3;}
 
         let $topranksDiv = $("div[data-page-id=top_ranks]");
         let $topranksTitle = $(".title.title--page-extra-small:eq(1)", $topranksDiv);
@@ -276,60 +310,69 @@ class Script {
         let $scriptTable = $("<table>", { id: "bps-table", style: "text-align: center; width: 100%;" }).appendTo($scriptDiv);
 
         let $tr = $("<tr>", { style: "width:100%" }).appendTo($scriptTable);
-        let $td = $("<td>", { style: "width:15%" }).appendTo($tr);
+        let $td = $("<td>", { style: "width:10%" }).appendTo($tr);
         // $("<span>", {text: "对比" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>", { style: "width:20%" }).appendTo($tr);
         $("<span>", { text: "成绩PP" }).appendTo($td);
         $td = $("<td>", { style: "width:5" }).appendTo($tr);
         // $("<span>", {text: "+" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>", { style: "width:20%" }).appendTo($tr);
         $("<span>", { text: "奖励PP" }).appendTo($td);
         $td = $("<td>", { style: "width:5" }).appendTo($tr);
         // $("<span>", {text: "=" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>", { style: "width:20%" }).appendTo($tr);
         $("<span>", { text: "总PP" }).appendTo($td);
+        $td = $("<td>", { style: "width:20%" }).appendTo($tr);
+        $("<span>", { text: "Rank " }).appendTo($td);
+        $("<a>", { text: "来源", href: "https://osudaily.net/ppbrowser.php", target:"_blank"}).appendTo($td);
 
-        $tr = $("<tr>", { style: "width:100%" }).appendTo($scriptTable);
-        $td = $("<td>", { style: "width:15%" }).appendTo($tr);
+        $tr = $("<tr>").appendTo($scriptTable);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { text: "原始数据" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { id: "bps-origin-scorepp", text: "获取中..." }).appendTo($td);
-        $td = $("<td>", { style: "width:5" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { text: "+" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { id: "bps-origin-bonuspp", text: "获取中..." }).appendTo($td);
-        $td = $("<td>", { style: "width:5" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { text: "=" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { id: "bps-origin-totalpp", text: "获取中..." }).appendTo($td);
+        $td = $("<td>").appendTo($tr);
+        $("<span>", { id: "bps-origin-rank", text: "获取中..." }).appendTo($td);
 
-        $tr = $("<tr>", { style: "width:100%" }).appendTo($scriptTable);
-        $td = $("<td>", { style: "width:15%" }).appendTo($tr);
+        $tr = $("<tr>").appendTo($scriptTable);
+        $td = $("<td>").appendTo($tr);
         // $("<span>", {text: "对比" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { id: "bps-compare-scorepp", text: "+0" }).appendTo($td);
-        $td = $("<td>", { style: "width:5" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         // $("<span>", {text: "+" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { id: "bps-compare-bonuspp", text: "+0" }).appendTo($td);
-        $td = $("<td>", { style: "width:5" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         // $("<span>", {text: "=" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { id: "bps-compare-totalpp", text: "+0" }).appendTo($td);
+        $td = $("<td>").appendTo($tr);
+        $("<span>", { id: "bps-compare-rank", text: "+0" }).appendTo($td);
 
-        $tr = $("<tr>", { style: "width:100%" }).appendTo($scriptTable);
-        $td = $("<td>", { style: "width:15%" }).appendTo($tr);
+        $tr = $("<tr>").appendTo($scriptTable);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { text: "模拟数据" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { id: "bps-sim-scorepp", text: "获取中..." }).appendTo($td);
-        $td = $("<td>", { style: "width:5" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { text: "+" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { id: "bps-sim-bonuspp", text: "获取中..." }).appendTo($td);
-        $td = $("<td>", { style: "width:5" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { text: "=" }).appendTo($td);
-        $td = $("<td>", { style: "width:25%" }).appendTo($tr);
+        $td = $("<td>").appendTo($tr);
         $("<span>", { id: "bps-sim-totalpp", text: "获取中..." }).appendTo($td);
+        $td = $("<td>").appendTo($tr);
+        $("<span>", { id: "bps-sim-rank", text: "获取中..." }).appendTo($td);
 
         $tr = $("<tr>", { style: "width:100%" }).appendTo($scriptTable);
         $td = $("<td>", { style: "padding:0 10px", colspan: "6" }).appendTo($tr);
@@ -358,12 +401,14 @@ class Script {
             // console.log(data)
             if (data) {
                 let totalPP = parseInt($(".value-display__value")[3].innerText.replace(/,/, ""));
+                let origin_rank = parseInt($(".value-display__value")[0].innerText.replace(/,/, "").substring(1));
                 //let playcount = parseInt($(".title__count", $("div[data-page-id=historical]"))[0].innerText.replace(/,/, ""));
                 let playcount = parseInt($(".profile-stats__value")[2].innerText.replace(/,/, ""));
                 if (!playcount || playcount <= 0) {
                     playcount = 100000;
                     console.log("无法获取playcount");
                 }
+                $("#bps-origin-rank").text("#" + origin_rank);
                 this.bsl = new BestScoreList(data, totalPP, playcount);
                 $showBoardButton.hide();
                 $scriptDiv.show();
@@ -403,6 +448,8 @@ class Script {
         $("#bps-sim-scorepp").text(this.bsl.scorePP.toFixed(DIGIT));
         $("#bps-sim-bonuspp").text(this.bsl.bonusPP.toFixed(DIGIT) + " (大约 " + this.bsl.scoreCount + " 个)");
         $("#bps-sim-totalpp").text(this.bsl.totalPP.toFixed(DIGIT));
+
+        getRank(this.bsl.totalPP.toFixed(DIGIT), this.modeCode);
     }
 
     showBPTable() {
