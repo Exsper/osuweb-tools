@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Osekai Medal
 // @namespace   https://github.com/Exsper/
-// @version     1.0.2
+// @version     1.0.3
 // @author      Exsper
 // @description 使用osekai查阅osu!成就方法
 // @homepage    https://github.com/Exsper/osuweb-tools#readme
@@ -102,7 +102,7 @@ class MedalInfo {
         // this.FirstAchievedBy = data.FirstAchievedBy;
         // this.FirstAchievedDate = data.FirstAchievedDate;
         // this.Grouping = data.Grouping;
-        // this.Instructions = data.Instructions;
+        this.Instructions = data.Instructions;
         this.Link = data.Link;
         // this.Locked = data.Locked;
         // this.MedalID = data.MedalID;
@@ -310,6 +310,7 @@ async function openMedal(alt) {
     medalContent.append(
         `<img width="80px" src="${mi.Link}"> 
         <span style="font-size: 36px; vertical-align: middle;">${mi.Name}</span>
+        <br><span>${mi.Instructions}</span><br>
         <br><span>Mods要求： </span>${(mi.Mods.length <= 0) ? "<span>未指定</span>" : mi.Mods.map(function (mods) {
             return `<div style="display: -webkit-inline-box; vertical-align: bottom;" class="mod mod--${mods}"></div><span>${mods}</span>`
         }).join("")}
