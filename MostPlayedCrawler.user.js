@@ -2,7 +2,7 @@
 // @name         Osu Most Played Crawler
 // @namespace    https://github.com/Exsper/
 // @supportURL   https://github.com/Exsper/osuweb-tools/issues
-// @version      1.0.0.3
+// @version      1.0.0.4
 // @description  查找玩得最多的谱面
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
