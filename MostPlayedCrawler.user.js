@@ -237,9 +237,9 @@ class Script {
         let $scriptDiv = $("<div>", { id: "mpc-div" });
         let $scriptTable = $("<table>", { id: "mpc-table", style: "width:100%" }).appendTo($scriptDiv);
         let $tr = $("<tr>", { style: "width:100%" }).appendTo($scriptTable);
-        let $td = $("<td>", { style: "width:70%;padding:0 10px" }).appendTo($tr);
+        let $td = $("<td>", { style: "width:65%;padding:0 10px" }).appendTo($tr);
         let $searchLabel = $("<span>", { text: "搜索：" }).appendTo($td);
-        let $searchTextbox = $("<input>", { type: "text", id: "mpc-search", style: "width:80%;max-width:unset;", class: "account-edit-entry__input" }).appendTo($td);
+        let $searchTextbox = $("<input>", { type: "text", id: "mpc-search", style: "width:100%;max-width:unset;", class: "account-edit-entry__input" }).appendTo($td);
         $searchTextbox.bind('input propertychange', () => {
             this.lastPressTime = new Date();
             $("#mpc-statlabel").text("搜索中...");
@@ -250,7 +250,7 @@ class Script {
             }, this.WAITTIME);
         });
 
-        $td = $("<td>", { style: "width:30%;padding:0 10px" }).appendTo($tr);
+        $td = $("<td>", { style: "width:35%;padding:0 10px" }).appendTo($tr);
         let $crawlPagesLabel = $("<span>", { id: "mpc-crawlpageslabel", text: "每次获取页数：" }).appendTo($td);
         let $crawlPagesTextbox = $("<input>", { type: "text", id: "mpc-searchpage", val: "10", class: "account-edit-entry__input", style: "width:30px;" }).appendTo($td);
         let crawPagesCount = DataStorage.getValue("crawPagesCount") || "10";
@@ -273,6 +273,24 @@ class Script {
             }
             $("#mpc-statlabel").text("已获取 " + this.crawler.recordCount + " 张谱面");
             this.search();
+        });
+        let $outputButton = $('<button>', { text: "导出全部bid", id: "mpc-outputbtn", class: "btn-osu-big" }).appendTo($td);
+        $outputButton.click(() => {
+            if (this.crawler.recordCount <= 0) {
+                alert("已获取谱面数量为0，请先获取谱面");
+                return;
+            }
+            let data = '';
+            this.crawler.records.map((playedBeatmapInfo) => {
+                data += playedBeatmapInfo.getBid() + "\r\n";
+            })
+            let name = 'bidlist.txt';
+            const urlObject = window.URL || window.webkitURL || window;
+            let export_blob = new Blob([data]);
+            let save_link = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+            save_link.href = urlObject.createObjectURL(export_blob);
+            save_link.download = name;
+            save_link.click();
         });
         $tr = $("<tr>", { style: "width:100%" }).appendTo($scriptTable);
         $td = $("<td>", { style: "width:10%" }).appendTo($tr);
