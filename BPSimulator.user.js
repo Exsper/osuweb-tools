@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        BPSimulator
 // @namespace   https://github.com/Exsper/
-// @version     1.1.0
+// @version     1.1.1
 // @author      Exsper
 // @description 模拟BP变更情况
 // @homepage    https://github.com/Exsper/osuweb-tools#readme
@@ -39,6 +39,8 @@ class BestScore {
 
 class BestScoreList {
     constructor(data, totalPP, playCount) {
+        this.MAX_SCORECOUNT = 1000;
+
         /** @type {Array<BestScore>} */
         this.BPList = data.map((score) => new BestScore(score));
         this.sort();
@@ -59,24 +61,24 @@ class BestScoreList {
         this.bonusPP = this.origin_bonusPP;
         this.scorePP = this.origin_scorePP;
         this.scoreCount = this.origin_scoreCount;
-
-        this.MAX_SCORECOUNT = 25397;
     }
 
     sort() {
+        // 部分玩家BP列表中会有loved（官网bug?）
+        this.BPList = this.BPList.filter((a) => a.pp !== null);
         this.BPList.sort((a, b) => b.pp - a.pp);
     }
 
     add(pp) {
         this.BPList.push(new BestScore({ pp }, true));
         this.sort();
-        this.scoreCount += 1;
+        if (this.scoreCount < this.MAX_SCORECOUNT) this.scoreCount += 1;
         this.cal_New();
     }
 
     del(index) {
         this.BPList.splice(index, 1);
-        this.scoreCount -= 1;
+        if (this.scoreCount < this.MAX_SCORECOUNT) this.scoreCount -= 1;
         this.cal_New();
     }
 
@@ -155,10 +157,11 @@ class BestScoreList {
 
     cal_Origin() {
         const MAX_BONUSPP = (0.25 / 0.0006);
+        const MAX_BONUSPP_REAL = MAX_BONUSPP * (1 - Math.pow(0.995, this.MAX_SCORECOUNT));
         if (this.origin_BPList.length < 100) {
             this.origin_nonBpPP = 0;
             this.origin_scoreCount = this.origin_BPList.length;
-            this.origin_bonusPP = MAX_BONUSPP * (1 - Math.pow(0.9994, this.origin_scoreCount));
+            this.origin_bonusPP = MAX_BONUSPP * (1 - Math.pow(0.995, this.origin_scoreCount));
             this.origin_scorePP = this.origin_totalPP - this.origin_bonusPP;
         }
         else {
@@ -169,20 +172,27 @@ class BestScoreList {
             }
             this.origin_scorePP = this.origin_nonBpPP + bpPP;
             this.origin_bonusPP = this.origin_totalPP - this.origin_scorePP;
-            if (this.origin_bonusPP >= MAX_BONUSPP) {
-                this.origin_bonusPP = MAX_BONUSPP;
+            // 可能计算失真，取相近整数判断
+            // console.log(MAX_BONUSPP_REAL, this.origin_bonusPP)
+            if (this.origin_bonusPP >= Math.floor(MAX_BONUSPP_REAL)) {
+                this.origin_bonusPP = MAX_BONUSPP_REAL;
                 this.origin_scoreCount = this.MAX_SCORECOUNT;
+
+                this.origin_scorePP = this.origin_totalPP - this.origin_bonusPP;
+                this.origin_nonBpPP = this.origin_scorePP - bpPP;
             }
             else {
-                this.origin_scoreCount = Math.round(Math.log10(-(this.origin_bonusPP / MAX_BONUSPP) + 1) / Math.log10(0.9994));
-                this.origin_bonusPP = MAX_BONUSPP * (1 - Math.pow(0.9994, this.origin_scoreCount));
+                this.origin_scoreCount = Math.round(Math.log10(-(this.origin_bonusPP / MAX_BONUSPP) + 1) / Math.log10(0.995));
+                this.origin_bonusPP = MAX_BONUSPP * (1 - Math.pow(0.995, this.origin_scoreCount));
             }
         }
     }
 
     cal_New() {
         const MAX_BONUSPP = (0.25 / 0.0006);
-        this.bonusPP = MAX_BONUSPP * (1 - Math.pow(0.9994, this.scoreCount));
+        const MAX_BONUSPP_REAL = MAX_BONUSPP * (1 - Math.pow(0.995, this.MAX_SCORECOUNT));
+        if (this.scoreCount < this.MAX_SCORECOUNT) this.bonusPP = MAX_BONUSPP * (1 - Math.pow(0.995, this.scoreCount));
+        else this.bonusPP = MAX_BONUSPP_REAL;
         let bpPP = 0;
         for (let i = 0; i < this.BPList.length; i++) {
             bpPP += this.BPList[i].pp * Math.pow(0.95, i);
@@ -429,7 +439,8 @@ class Script {
         const DIGIT = 3;
 
         $("#bps-origin-scorepp").text(this.bsl.origin_scorePP.toFixed(DIGIT));
-        $("#bps-origin-bonuspp").text(this.bsl.origin_bonusPP.toFixed(DIGIT) + " (大约 " + this.bsl.origin_scoreCount + " 个)");
+        if (this.bsl.origin_scoreCount >= this.bsl.MAX_SCORECOUNT) $("#bps-origin-bonuspp").text(this.bsl.origin_bonusPP.toFixed(DIGIT) + " (大于 " + this.bsl.MAX_SCORECOUNT + " 个)");
+        else $("#bps-origin-bonuspp").text(this.bsl.origin_bonusPP.toFixed(DIGIT) + " (大约 " + this.bsl.origin_scoreCount + " 个)");
         $("#bps-origin-totalpp").text(this.bsl.origin_totalPP.toFixed(DIGIT));
 
         let c_scorepp = this.bsl.scorePP - this.bsl.origin_scorePP;
@@ -446,7 +457,8 @@ class Script {
         else $("#bps-compare-totalpp").text(" ");
 
         $("#bps-sim-scorepp").text(this.bsl.scorePP.toFixed(DIGIT));
-        $("#bps-sim-bonuspp").text(this.bsl.bonusPP.toFixed(DIGIT) + " (大约 " + this.bsl.scoreCount + " 个)");
+        if (this.bsl.scoreCount >= this.bsl.MAX_SCORECOUNT) $("#bps-sim-bonuspp").text(this.bsl.bonusPP.toFixed(DIGIT) + " (大于 " + this.bsl.MAX_SCORECOUNT + " 个)");
+        else $("#bps-sim-bonuspp").text(this.bsl.bonusPP.toFixed(DIGIT) + " (大约 " + this.bsl.scoreCount + " 个)");
         $("#bps-sim-totalpp").text(this.bsl.totalPP.toFixed(DIGIT));
 
         getRank(this.bsl.totalPP.toFixed(DIGIT), this.modeCode);
