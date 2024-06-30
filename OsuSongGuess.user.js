@@ -2,7 +2,7 @@
 // @name         Osu!猜歌
 // @namespace    https://github.com/Exsper/
 // @supportURL   https://github.com/Exsper/osuweb-tools/issues
-// @version      0.0.2
+// @version      0.0.3
 // @description  osu猜歌，需要先登录osu账号，在玩家页使用
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
@@ -409,8 +409,8 @@ function addCss() {
         $(document.head).append($("<style class='song-guess-style'></style>").html(
             `
             .guesslabel {font-size: 18px; margin-right: 10px;}
-            .guessButton {margin: 0 10px; font-size: 24px;}
-            .guessButton:hover {}
+            .guessButton {margin: 0 10px; font-size: 24px; background-color: #5864ff; border: none; color: white;}
+            .guessButton:hover {background-color: #7781ff;}
             .guessCloseBtnDiv {position: absolute; right: 15px; top: 15px;}
             .guessPanel {height: 80%; overflow-y: auto; color: #000; width: 80%; max-width: 800px; position: fixed; display: none;z-index: 10000;padding: 15px 20px 10px;-webkit-border-radius: 10px;-moz-border-radius: 10px;border-radius: 10px;background: #fff; left: 50%; top:50%; transform: translate(-50%, -50%);}
             .guessOverlay {position: fixed;top: 0;left: 0;bottom:0;right:0;width: 100%;height: 100%;z-index: 9999;background: #000;display: none;-ms-filter: 'alpha(Opacity=50)';-moz-opacity: .5;-khtml-opacity: .5;opacity: .5;}
@@ -512,7 +512,7 @@ function openGuessPanel(guessStat) {
         <br>
 
         <div style="display: flex;justify-content: space-evenly;bottom: 100px;position: absolute;width: 95%;font-size: 32px;">
-        <input type="text" id="guess-question-answer" style="text-align: center; width: 100%;"></input>
+        <input type="text" id="guess-question-answer" style="text-align: center; width: 100%;" autocomplete="off" autofocus></input>
         </div>
         <br>
         <br>
@@ -637,6 +637,12 @@ function openGuessPanel(guessStat) {
 
     $("#guess-tip").click(() => {
         showTip();
+    });
+
+    $("#guess-question-answer").keydown((event) => {
+        if (event.keyCode === 13) {
+            $("#guess-enter").click();
+        }
     });
 
     $("#guess-enter").click(() => {
