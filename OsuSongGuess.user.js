@@ -2,7 +2,7 @@
 // @name         Osu!猜歌
 // @namespace    https://github.com/Exsper/
 // @supportURL   https://github.com/Exsper/osuweb-tools/issues
-// @version      0.0.3
+// @version      0.0.4
 // @description  osu猜歌，需要先登录osu账号，在玩家页使用
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
@@ -411,6 +411,7 @@ function addCss() {
             .guesslabel {font-size: 18px; margin-right: 10px;}
             .guessButton {margin: 0 10px; font-size: 24px; background-color: #5864ff; border: none; color: white;}
             .guessButton:hover {background-color: #7781ff;}
+            .guessButton:disabled {background-color: #b7b7b7;}
             .guessCloseBtnDiv {position: absolute; right: 15px; top: 15px;}
             .guessPanel {height: 80%; overflow-y: auto; color: #000; width: 80%; max-width: 800px; position: fixed; display: none;z-index: 10000;padding: 15px 20px 10px;-webkit-border-radius: 10px;-moz-border-radius: 10px;border-radius: 10px;background: #fff; left: 50%; top:50%; transform: translate(-50%, -50%);}
             .guessOverlay {position: fixed;top: 0;left: 0;bottom:0;right:0;width: 100%;height: 100%;z-index: 9999;background: #000;display: none;-ms-filter: 'alpha(Opacity=50)';-moz-opacity: .5;-khtml-opacity: .5;opacity: .5;}
@@ -497,7 +498,7 @@ function openGuessPanel(guessStat) {
         <br>
         <br>
 
-        <span style="display: grid;font-size: 32px;">请输入歌曲名称</span>
+        <span id="guess-stat-text" style="display: grid;font-size: 32px;">请输入歌曲名称</span>
         <br>
         <br>
 
@@ -547,6 +548,8 @@ function openGuessPanel(guessStat) {
             $("#guess-enter").text("出错了！");
             return;
         }
+        $("#guess-stat-text").text("请输入歌曲名称");
+
         $("#guess-abort").attr("disabled", false);
         $("#guess-enter").attr("disabled", false);
         $("#guess-enter").text("确定");
@@ -629,6 +632,7 @@ function openGuessPanel(guessStat) {
     }
 
     $("#guess-abort").click(() => {
+        $("#guess-stat-text").text("跳过该曲目");
         guessStat.abortGuessOne();
         showCorrectAnswer();
         if (guessStat.getLeftQuestionCount() > 0) waitForNext();
@@ -648,6 +652,7 @@ function openGuessPanel(guessStat) {
     $("#guess-enter").click(() => {
         if (guessStat.isGuessing) {
             if (guessStat.checkAnswer($("#guess-question-answer").val())) {
+                $("#guess-stat-text").text("恭喜您，答对了！");
                 showCorrectAnswer();
                 guessStat.passGuessOne();
                 if (guessStat.getLeftQuestionCount() > 0) waitForNext();
