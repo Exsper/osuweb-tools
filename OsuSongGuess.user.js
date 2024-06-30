@@ -8,7 +8,8 @@
 // @match        https://osu.ppy.sh/users/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM.xmlHttpRequest
-// @require      https://cdn.staticfile.org/jquery/2.1.3/jquery.min.js
+// @require      https://code.jquery.com/jquery-3.7.1.min.js
+// @license      MIT License
 // @run-at       document-end
 // ==/UserScript==
 
