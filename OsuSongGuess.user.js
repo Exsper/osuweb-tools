@@ -2,7 +2,7 @@
 // @name         Osu!猜歌
 // @namespace    https://github.com/Exsper/
 // @supportURL   https://github.com/Exsper/osuweb-tools/issues
-// @version      0.0.1
+// @version      0.0.2
 // @description  osu猜歌，需要先登录osu账号，在玩家页使用
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
@@ -418,6 +418,67 @@ function addCss() {
     }
 }
 
+function openRankPanel(guessStat) {
+    let guessContent = $("#guessContent");
+    guessContent.empty();
+    $("#guessOverlay").fadeIn(200);
+    $("#guessPanel").fadeIn(200);
+    
+    let score = guessStat.totalScore;
+    let max_score = guessStat.guessedCount * 1000;
+    let percent = score / max_score;
+    let rank = "";
+    if (percent >= 0.9) rank = "举世无双";
+    else if (percent >= 0.8) rank = "登峰造极";
+    else if (percent >= 0.7) rank = "技冠群雄";
+    else if (percent >= 0.6) rank = "炉火纯青";
+    else if (percent >= 0.5) rank = "出类拔萃";
+    else if (percent >= 0.4) rank = "略有小成";
+    else if (percent >= 0.3) rank = "渐入佳境";
+    else if (percent >= 0.2) rank = "略知一二";
+    else if (percent >= 0.1) rank = "初窥门径";
+    else rank = "未曾涉猎";
+
+    let stars = new Array(Math.ceil(percent * 10)).fill("★").join("");
+
+    guessContent.append(
+        `
+        <span style="display: grid;font-size: 32px;">猜歌结束</span>
+        <br>
+        <br>
+
+        <span style="font-size: 24px;">您猜了</span>
+        <span style="font-size: 36px;">${guessStat.guessedCount}</span>
+        <span style="font-size: 24px;">首歌</span>
+  
+        <br>
+
+        <span style="font-size: 24px;">共答对了</span>
+        <span style="font-size: 48px;">${guessStat.correctCount}</span>
+        <span style="font-size: 24px;">首</span>
+
+        <br>
+
+        <span style="font-size: 24px;">您的评价是...</span>
+        <br>
+        <br>
+        <span style="font-size: 128px;">${rank}</span>
+        <br>
+        <span style="font-size: 32px;">${stars}</span>
+        <br>
+        <br>
+        <br>
+
+        <button id="guess-restart" class="guessButton" style="width: 60%; height: 80px">重新猜歌</button>
+        </div>
+        `
+    );
+
+    $("#guess-restart").click(()=> {
+        openSettingPanel();
+    });
+}
+
 function openGuessPanel(guessStat) {
     let guessContent = $("#guessContent");
     guessContent.empty();
@@ -468,6 +529,10 @@ function openGuessPanel(guessStat) {
         $("#guess-question-score").text("得分：" + guessStat.currentScore);
         $("#guess-correct-count").text("答对题目：" + guessStat.correctCount + "/" + guessStat.guessedCount);
         $("#guess-total-score").text("总得分：" + guessStat.totalScore);
+        if (!$("#guessPanel").is(":visible")) {
+            clearInterval(dataUpdateTimer);
+            dataUpdateTimer = null;
+        }
     }, 1000);
 
     function showQuestion() {
@@ -559,6 +624,7 @@ function openGuessPanel(guessStat) {
         $("#guess-tip").attr("disabled", true);
         $("#guess-enter").attr("disabled", true);
         $("#guess-enter").text("游戏结束");
+        openRankPanel(guessStat);
     }
 
     $("#guess-abort").click(() => {
