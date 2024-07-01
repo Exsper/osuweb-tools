@@ -2,7 +2,7 @@
 // @name         Osu!猜歌
 // @namespace    https://github.com/Exsper/
 // @supportURL   https://github.com/Exsper/osuweb-tools/issues
-// @version      0.0.4
+// @version      0.0.5
 // @description  osu猜歌，需要先登录osu账号，在玩家页使用
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
@@ -83,6 +83,18 @@ class BeatmapSetInfo {
         this.title_unicode = mpdata.beatmapset.title_unicode;
         this.creator = mpdata.beatmapset.creator;
         this.preview_url = "https:" + mpdata.beatmapset.preview_url;
+        return this;
+    }
+
+    convertFromRankingMostPlayed(rdata) {
+        this.id = rdata.id;
+        this.artist = rdata.artist;
+        this.artist_unicode = rdata.artist_unicode;
+        this.cover = rdata.covers.cover;
+        this.title = rdata.title;
+        this.title_unicode = rdata.title_unicode;
+        this.creator = rdata.creator;
+        this.preview_url = "https:" + rdata.preview_url;
         return this;
     }
 }
@@ -235,7 +247,53 @@ class MostPlayedInfo {
             return this.convert2GuessData(data);
         }
         else {
-            throw "无法获取BP信息";
+            throw "无法获取最多游玩信息";
+        }
+    }
+}
+
+class BeatmapRankingInfo {
+    static async getRankingMostPlayedInfo(mode, sort) {
+        try {
+            let mi = await getAPI(`https://osu.ppy.sh/beatmapsets/search?e=&c=&g=&l=&m=${mode}&nsfw=&played=&q=&r=&sort=${sort}&s=`, "GET").then((data) => {
+                if (!data || !Array.isArray(data.beatmapsets)) return null;
+                return data;
+            });
+            return mi;
+        }
+        catch (ex) {
+            console.log(ex);
+            return null;
+        }
+    }
+
+    static getMode() {
+        let selectMode = $(".game-mode-link.game-mode-link--active").attr("data-mode");
+        let mode = "";
+        if (selectMode.indexOf("taiko") >= 0) mode = "1";
+        if (selectMode.indexOf("fruits") >= 0) mode = "2";
+        if (selectMode.indexOf("mania") >= 0) mode = "3";
+        return mode;
+    }
+
+    static convert2GuessData(data) {
+        let bsis = data.map((b) => {
+            return new BeatmapSetInfo().convertFromRankingMostPlayed(b);
+        });
+        return new GuessData(bsis);
+    }
+
+    /**
+     * @param {"plays_desc"|"favourites_desc"} key 
+     * @returns {GuessData}
+     */
+    static async getGuessData(key) {
+        let data = await this.getRankingMostPlayedInfo(this.getMode(), key);
+        if (data && data.beatmapsets) {
+            return this.convert2GuessData(data.beatmapsets);
+        }
+        else {
+            throw "无法获取谱面排行页信息";
         }
     }
 }
@@ -425,7 +483,7 @@ function openRankPanel(guessStat) {
     guessContent.empty();
     $("#guessOverlay").fadeIn(200);
     $("#guessPanel").fadeIn(200);
-    
+
     let score = guessStat.totalScore;
     let max_score = guessStat.guessedCount * 1000;
     let percent = score / max_score;
@@ -476,7 +534,7 @@ function openRankPanel(guessStat) {
         `
     );
 
-    $("#guess-restart").click(()=> {
+    $("#guess-restart").click(() => {
         openSettingPanel();
     });
 }
@@ -685,10 +743,18 @@ function openSettingPanel() {
         <span style="font-size: 24px;">选择题库来源：</span>
         <br>
         <input type="radio" id="guess-source-bp" name="guess-source" value="bp" checked>
-        <label for="guess-source-bp" class="guesslabel">BP列表</label>
+        <label for="guess-source-bp" class="guesslabel">个人BP列表</label>
   
         <input type="radio" id="guess-source-mp" name="guess-source" value="mp">
-        <label for="guess-source-mp" class="guesslabel">最多游玩</label>
+        <label for="guess-source-mp" class="guesslabel">个人最多游玩</label>
+
+        <br>
+
+        <input type="radio" id="guess-source-rmp" name="guess-source" value="rmp">
+        <label for="guess-source-rmp" class="guesslabel">最多游玩谱面TOP50</label>
+
+        <input type="radio" id="guess-source-rmf" name="guess-source" value="rmf">
+        <label for="guess-source-rmf" class="guesslabel">最多收藏谱面TOP50</label>
         <br>
         <span>将按当前网页的玩家和模式获取谱面数据</span>
         <br>
@@ -732,6 +798,10 @@ function openSettingPanel() {
         `
     );
 
+    $("#guess-count-custom-num").on("input", () => {
+        $("#guess-count-custom").prop("checked", true);
+    });
+
     $("#guess-start").click(async () => {
         let guessSource = $("input[name=guess-source]:checked").val();
         let questionCount = parseInt($("input[name=guess-count]:checked").val());
@@ -750,6 +820,12 @@ function openSettingPanel() {
             }
             else if (guessSource === "mp") {
                 guessdata = await MostPlayedInfo.getGuessData();
+            }
+            else if (guessSource === "rmp") {
+                guessdata = await BeatmapRankingInfo.getGuessData("plays_desc");
+            }
+            else if (guessSource === "rmf") {
+                guessdata = await BeatmapRankingInfo.getGuessData("favourites_desc");
             }
         }
         catch (ex) {
