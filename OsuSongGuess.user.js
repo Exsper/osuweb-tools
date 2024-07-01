@@ -2,7 +2,7 @@
 // @name         Osu!猜歌
 // @namespace    https://github.com/Exsper/
 // @supportURL   https://github.com/Exsper/osuweb-tools/issues
-// @version      0.0.5
+// @version      0.0.6
 // @description  osu猜歌，需要先登录osu账号，在玩家页使用
 // @author       Exsper
 // @match        https://osu.ppy.sh/users/*
@@ -252,6 +252,50 @@ class MostPlayedInfo {
     }
 }
 
+class FavouriteInfo {
+    static async getFavouriteInfo(href) {
+        try {
+            let params = { limit: 100, offset: 0 };
+            let url = getUrlWithParams(href + "/beatmapsets/favourite", params);
+            let mi = await getAPI(url, "GET").then((data) => {
+                if (!data || !Array.isArray(data)) return null;
+                return data;
+            });
+            return mi;
+        }
+        catch (ex) {
+            console.log(ex);
+            return null;
+        }
+    }
+
+    static getUrl() {
+        let urlex = /users\/\d+/.exec(location.href);
+        if (urlex) {
+            return location.origin + "/" + urlex[0];
+        }
+        else throw "网址错误";
+    }
+
+    static convert2GuessData(data) {
+        let bsis = data.map((b) => {
+            // 格式与ranking一致
+            return new BeatmapSetInfo().convertFromRankingMostPlayed(b);
+        });
+        return new GuessData(bsis);
+    }
+
+    static async getGuessData() {
+        let data = await this.getFavouriteInfo(this.getUrl());
+        if (data) {
+            return this.convert2GuessData(data);
+        }
+        else {
+            throw "无法获取个人收藏信息";
+        }
+    }
+}
+
 class BeatmapRankingInfo {
     static async getRankingMostPlayedInfo(mode, sort) {
         try {
@@ -308,6 +352,7 @@ class GuessStat {
         this.questionType = questionType;
         this.guessdata = gd;
         this.questionCount = questionCount;
+        if (this.questionCount >= this.guessdata.getLeftQuestionCount()) this.questionCount = this.guessdata.getLeftQuestionCount();
         this.guessedCount = 0;
         this.correctCount = 0;
         this.currentIndex = 0;
@@ -371,6 +416,9 @@ class GuessStat {
         if (!this.creatorShown) pool.push(4);
 
         this.currentScore -= 100;
+        if (this.currentScore <= 500) {
+            this.currentScore = 500;
+        }
 
         let index = Math.floor(Math.random() * pool.length);
         switch (pool[index]) {
@@ -585,7 +633,7 @@ function openGuessPanel(guessStat) {
     );
 
     let dataUpdateTimer = setInterval(() => {
-        $("#guess-question-index").text("#" + guessStat.currentIndex);
+        $("#guess-question-index").text("#" + guessStat.currentIndex + "/" + guessStat.questionCount);
         $("#guess-question-score").text("得分：" + guessStat.currentScore);
         $("#guess-correct-count").text("答对题目：" + guessStat.correctCount + "/" + guessStat.guessedCount);
         $("#guess-total-score").text("总得分：" + guessStat.totalScore);
@@ -748,6 +796,9 @@ function openSettingPanel() {
         <input type="radio" id="guess-source-mp" name="guess-source" value="mp">
         <label for="guess-source-mp" class="guesslabel">个人最多游玩</label>
 
+        <input type="radio" id="guess-source-fav" name="guess-source" value="fav">
+        <label for="guess-source-fav" class="guesslabel">个人收藏</label>
+
         <br>
 
         <input type="radio" id="guess-source-rmp" name="guess-source" value="rmp">
@@ -820,6 +871,9 @@ function openSettingPanel() {
             }
             else if (guessSource === "mp") {
                 guessdata = await MostPlayedInfo.getGuessData();
+            }
+            else if (guessSource === "fav") {
+                guessdata = await FavouriteInfo.getGuessData();
             }
             else if (guessSource === "rmp") {
                 guessdata = await BeatmapRankingInfo.getGuessData("plays_desc");
